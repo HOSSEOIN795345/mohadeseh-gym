@@ -8,9 +8,9 @@ package.domain = org.mohadeseh
 
 source.dir = .
 
-source.include_exts = py,ttf,png,jpg,kv
+source.include_exts = py,ttf,json,png,jpg,kv
 
-requirements = python3,kivy
+requirements = python3,kivy,arabic_reshaper,python-bidi
 
 orientation = portrait
 
