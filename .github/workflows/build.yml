@@ -1,11 +1,16 @@
 name: Build mohadeseh gym APK
 
+
 on:
   workflow_dispatch:
 
+
 jobs:
+
   build:
+
     runs-on: ubuntu-latest
+
 
     steps:
 
@@ -15,52 +20,48 @@ jobs:
 
     - name: Install dependencies
       run: |
+
         sudo apt update
+
         sudo apt install -y \
           python3-pip \
+          python3-setuptools \
           git \
           zip \
           unzip \
           openjdk-17-jdk
 
 
-    - name: Install Python packages
+    - name: Install buildozer
       run: |
-        pip install --upgrade pip
-        pip install buildozer cython
+
+        pip3 install --user buildozer cython
 
 
     - name: Setup Android SDK
       run: |
 
-        export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
-        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+        mkdir -p $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
 
-        mkdir -p $ANDROID_HOME/licenses
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
-        echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" > $ANDROID_HOME/licenses/android-sdk-license
-
-        echo "84831b9409646a918e30573bab4c9c91346d8abd" >> $ANDROID_HOME/licenses/android-sdk-license
-
-
-        yes | sdkmanager --sdk_root=$ANDROID_HOME \
-          "platform-tools" \
-          "platforms;android-35" \
-          "build-tools;35.0.0"
-
+        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
+        "platform-tools" \
+        "platforms;android-35" \
+        "build-tools;35.0.0"
 
 
     - name: Build APK
       run: |
 
-        export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
-        export PATH=$ANDROID_HOME/platform-tools:$PATH
-
-        buildozer android debug
+        ~/.local/bin/buildozer android debug
 
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
+
       with:
+
         name: mohadeseh-gym-apk
+
         path: bin/*.apk
