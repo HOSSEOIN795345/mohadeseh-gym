@@ -21,6 +21,7 @@ jobs:
     - name: Install packages
       shell: bash
       run: |
+
         sudo apt-get update
 
         sudo apt-get install -y \
@@ -31,23 +32,25 @@ jobs:
           wget
 
 
-    - name: Install buildozer
+
+    - name: Install build tools
       shell: bash
       run: |
 
         python3 -m pip install --user --upgrade pip
 
-        python3 -m pip install --user buildozer
+        python3 -m pip install --user \
+          buildozer \
+          cython==0.29.36
 
-        python3 -m pip install --user cython==0.29.36
 
 
-
-    - name: Install Android SDK
+    - name: Setup Android SDK
       shell: bash
       run: |
 
         export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
+
 
         mkdir -p $ANDROID_HOME/cmdline-tools
 
@@ -55,7 +58,8 @@ jobs:
         cd /tmp
 
 
-        wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+        wget -q \
+        https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
 
 
         unzip -q commandlinetools-linux-11076708_latest.zip
@@ -64,7 +68,8 @@ jobs:
         mkdir -p $ANDROID_HOME/cmdline-tools/latest
 
 
-        mv cmdline-tools/* $ANDROID_HOME/cmdline-tools/latest/
+        mv cmdline-tools/* \
+        $ANDROID_HOME/cmdline-tools/latest/
 
 
         export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
@@ -74,13 +79,13 @@ jobs:
 
 
         sdkmanager \
-          "platform-tools" \
-          "platforms;android-35" \
-          "build-tools;35.0.0"
+        "platform-tools" \
+        "platforms;android-35" \
+        "build-tools;35.0.0"
 
 
 
-    - name: Fix sdkmanager path
+    - name: Fix sdkmanager compatibility
       shell: bash
       run: |
 
@@ -103,15 +108,11 @@ jobs:
         export PATH=$PATH:$HOME/.local/bin
 
 
-        buildozer android clean
-
-
         buildozer android debug
 
 
 
     - name: Upload APK
-
       uses: actions/upload-artifact@v4
 
       with:
