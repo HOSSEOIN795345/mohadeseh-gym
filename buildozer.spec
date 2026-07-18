@@ -6,6 +6,8 @@ package.name = mohadesehgym
 
 package.domain = org.mohadeseh
 
+version = 1.0
+
 source.dir = .
 
 source.include_exts = py,ttf,json,png,jpg,kv
