@@ -15,48 +15,76 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Install system packages
+
+    - name: Install dependencies
       run: |
         sudo apt update
         sudo apt install -y \
           python3 \
           python3-pip \
-          python3-venv \
           git \
           unzip \
           wget \
-          openjdk-17-jdk \
+          openjdk-11-jdk \
           autoconf \
           automake \
           libtool \
           pkg-config \
           build-essential
 
+
+    - name: Install Android SDK command line tools
+      run: |
+
+        mkdir -p $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
+
+        cd /tmp
+
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+
+        unzip -q commandlinetools-linux-11076708_latest.zip
+
+        mv cmdline-tools \
+        $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest
+
+
+    - name: Configure Android SDK
+      run: |
+
+        export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
+
+        export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
+
+        yes | sdkmanager --licenses
+
+        sdkmanager \
+          "platform-tools" \
+          "platforms;android-35" \
+          "build-tools;35.0.0"
+
+
     - name: Install Buildozer
       run: |
+
         python3 -m pip install --upgrade pip
-        pip3 install --user buildozer cython==0.29.37
 
-    - name: Prepare Android licenses
+        pip3 install --user \
+          buildozer \
+          cython==0.29.37
+
+
+    - name: Build mohadeseh gym
       run: |
-        mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
 
-        echo 24333f8a63b6825ea9c5514f83c2829b004d1fee > \
-        ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-
-        echo 84831b9409646a918e30573bab4c9c91346d8abd > \
-        ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
-
-    - name: Build
-      run: |
         export PATH=$PATH:$HOME/.local/bin
 
         rm -rf .buildozer
 
         buildozer android debug
 
+
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: mohadeseh-gym
+        name: mohadeseh-gym-apk
         path: bin/*.apk
