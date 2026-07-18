@@ -1,4 +1,4 @@
-name: Build mohadeseh gym APK
+name: Build Mohadeseh Gym APK
 
 on:
   workflow_dispatch:
@@ -7,9 +7,8 @@ on:
       - main
 
 jobs:
-
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
 
@@ -22,79 +21,77 @@ jobs:
         sudo apt update
 
         sudo apt install -y \
-          python3 \
-          python3-pip \
-          git \
-          unzip \
-          wget \
-          openjdk-17-jdk \
-          autoconf \
-          automake \
-          libtool \
-          pkg-config \
-          build-essential
+        python3-pip \
+        python3-venv \
+        git \
+        unzip \
+        wget \
+        openjdk-17-jdk \
+        autoconf \
+        automake \
+        libtool \
+        pkg-config
 
 
-    - name: Set Java 17
+    - name: Setup Java 17
       run: |
-
         echo "JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64" >> $GITHUB_ENV
-
         echo "/usr/lib/jvm/temurin-17-jdk-amd64/bin" >> $GITHUB_PATH
 
-        java -version
+
+    - name: Install Buildozer
+      run: |
+        python3 -m pip install --user --upgrade pip
+        python3 -m pip install --user buildozer cython==0.29.36
 
 
-    - name: Install Android command line tools
+    - name: Setup Android SDK
       run: |
 
-        export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
+        mkdir -p $HOME/.buildozer/android/platform
 
-        mkdir -p $ANDROID_HOME/cmdline-tools
-
-        cd /tmp
+        cd $HOME/.buildozer/android/platform
 
         wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
 
         unzip -q commandlinetools-linux-11076708_latest.zip
 
-        mv cmdline-tools \
-        $ANDROID_HOME/cmdline-tools/latest
+        mkdir -p android-sdk/cmdline-tools
+
+        mv cmdline-tools android-sdk/cmdline-tools/latest
 
 
-    - name: Install Android SDK packages
+        echo "ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk" >> $GITHUB_ENV
+
+        echo "$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
+
+        echo "$HOME/.buildozer/android/platform/android-sdk/platform-tools" >> $GITHUB_PATH
+
+
+    - name: Install Android packages
       run: |
 
         export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
 
-        export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
-
-        yes | sdkmanager --licenses || true
+        yes | sdkmanager --licenses
 
         sdkmanager \
-          "platform-tools" \
-          "platforms;android-35" \
-          "build-tools;35.0.0"
+        "platform-tools" \
+        "platforms;android-35" \
+        "build-tools;35.0.0"
 
 
-    - name: Install Buildozer
+
+    - name: Clean old build
       run: |
 
-        python3 -m pip install --upgrade pip
-
-        pip3 install --user \
-          buildozer \
-          cython==0.29.37
+        rm -rf .buildozer
 
 
-    - name: Build mohadeseh gym
+    - name: Build APK
       run: |
 
         export PATH=$PATH:$HOME/.local/bin
-
-        export JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64
-
-        rm -rf .buildozer
 
         buildozer android debug
 
@@ -102,5 +99,7 @@ jobs:
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
+
         name: mohadeseh-gym-apk
+
         path: bin/*.apk
