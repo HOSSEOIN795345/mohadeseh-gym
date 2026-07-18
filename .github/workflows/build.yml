@@ -19,44 +19,52 @@ jobs:
 
 
     - name: Install packages
-      run:
+      shell: bash
+      run: |
+        sudo apt-get update
 
-        sudo apt update
-
-        sudo apt install -y \
-        python3-pip \
-        git \
-        unzip \
-        openjdk-17-jdk \
-        wget
+        sudo apt-get install -y \
+          python3-pip \
+          git \
+          unzip \
+          openjdk-17-jdk \
+          wget
 
 
     - name: Install buildozer
-
+      shell: bash
       run: |
 
-        pip3 install --user buildozer cython==0.29.36
+        python3 -m pip install --user --upgrade pip
+
+        python3 -m pip install --user buildozer
+
+        python3 -m pip install --user cython==0.29.36
+
 
 
     - name: Install Android SDK
-
+      shell: bash
       run: |
 
-        mkdir -p $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
-
-        cd $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
-
-
-        wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-
-
-        unzip commandlinetools-linux-11076708_latest.zip
-
-
-        mv cmdline-tools latest
-
-
         export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
+
+        mkdir -p $ANDROID_HOME/cmdline-tools
+
+
+        cd /tmp
+
+
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+
+
+        unzip -q commandlinetools-linux-11076708_latest.zip
+
+
+        mkdir -p $ANDROID_HOME/cmdline-tools/latest
+
+
+        mv cmdline-tools/* $ANDROID_HOME/cmdline-tools/latest/
 
 
         export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
@@ -66,32 +74,39 @@ jobs:
 
 
         sdkmanager \
-        "platform-tools" \
-        "platforms;android-35" \
-        "build-tools;35.0.0"
+          "platform-tools" \
+          "platforms;android-35" \
+          "build-tools;35.0.0"
 
 
 
-    - name: Create sdkmanager shortcut
-
+    - name: Fix sdkmanager path
+      shell: bash
       run: |
 
-        mkdir -p $HOME/.buildozer/android/platform/android-sdk/tools/bin
+        SDK=$HOME/.buildozer/android/platform/android-sdk
 
 
-        ln -s \
-        $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager \
-        $HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
+        mkdir -p $SDK/tools/bin
+
+
+        ln -sf \
+        $SDK/cmdline-tools/latest/bin/sdkmanager \
+        $SDK/tools/bin/sdkmanager
 
 
 
-    - name: Build APK
-
+    - name: Build mohadeseh gym APK
+      shell: bash
       run: |
 
-        ~/.local/bin/buildozer android clean
+        export PATH=$PATH:$HOME/.local/bin
 
-        ~/.local/bin/buildozer android debug
+
+        buildozer android clean
+
+
+        buildozer android debug
 
 
 
@@ -101,6 +116,6 @@ jobs:
 
       with:
 
-        name: mohadeseh-gym
+        name: mohadeseh-gym-apk
 
         path: bin/*.apk
