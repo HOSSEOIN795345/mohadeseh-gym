@@ -1,4 +1,4 @@
-name: Build mohadeseh gym APK
+name: Build mohadeseh gym
 
 
 on:
@@ -18,50 +18,89 @@ jobs:
       uses: actions/checkout@v4
 
 
-    - name: Install dependencies
-      run: |
+    - name: Install packages
+      run:
 
         sudo apt update
 
         sudo apt install -y \
-          python3-pip \
-          python3-setuptools \
-          git \
-          zip \
-          unzip \
-          openjdk-17-jdk
+        python3-pip \
+        git \
+        unzip \
+        openjdk-17-jdk \
+        wget
 
 
     - name: Install buildozer
+
       run: |
 
-        pip3 install --user buildozer cython
+        pip3 install --user buildozer cython==0.29.36
 
 
-    - name: Setup Android SDK
+    - name: Install Android SDK
+
       run: |
 
         mkdir -p $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
 
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+        cd $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
 
-        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
+
+        wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+
+
+        unzip commandlinetools-linux-11076708_latest.zip
+
+
+        mv cmdline-tools latest
+
+
+        export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
+
+
+        export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
+
+
+        yes | sdkmanager --licenses || true
+
+
+        sdkmanager \
         "platform-tools" \
         "platforms;android-35" \
         "build-tools;35.0.0"
 
 
-    - name: Build APK
+
+    - name: Create sdkmanager shortcut
+
       run: |
+
+        mkdir -p $HOME/.buildozer/android/platform/android-sdk/tools/bin
+
+
+        ln -s \
+        $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager \
+        $HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
+
+
+
+    - name: Build APK
+
+      run: |
+
+        ~/.local/bin/buildozer android clean
 
         ~/.local/bin/buildozer android debug
 
 
+
     - name: Upload APK
+
       uses: actions/upload-artifact@v4
 
       with:
 
-        name: mohadeseh-gym-apk
+        name: mohadeseh-gym
 
         path: bin/*.apk
