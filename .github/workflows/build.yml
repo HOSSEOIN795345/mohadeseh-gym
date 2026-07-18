@@ -1,122 +1,64 @@
-name: Build mohadeseh gym
-
+name: Build mohadeseh gym APK
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
-
 jobs:
-
   build:
-
-    runs-on: ubuntu-latest
-
+    runs-on: ubuntu-22.04
 
     steps:
 
     - name: Checkout
       uses: actions/checkout@v4
 
-
-    - name: Install packages
-      shell: bash
+    - name: Install dependencies
       run: |
-
-        sudo apt-get update
-
-        sudo apt-get install -y \
+        sudo apt update
+        sudo apt install -y \
+          python3 \
           python3-pip \
+          python3-venv \
           git \
           unzip \
+          wget \
           openjdk-17-jdk \
-          wget
+          autoconf \
+          automake \
+          libtool \
+          pkg-config \
+          cmake \
+          build-essential
 
-
-
-    - name: Install build tools
-      shell: bash
+    - name: Install python packages
       run: |
-
-        python3 -m pip install --user --upgrade pip
-
-        python3 -m pip install --user \
+        python3 -m pip install --upgrade pip
+        pip3 install --user \
           buildozer \
-          cython==0.29.36
+          cython==0.29.37
 
-
-
-    - name: Setup Android SDK
-      shell: bash
+    - name: Accept Android licenses
       run: |
+        mkdir -p $HOME/.buildozer/android/platform/android-sdk/licenses
 
-        export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
+        echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" > \
+        $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
 
+        echo "84831b9409646a918e30573bab4c9c91346d8abd" > \
+        $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
 
-        mkdir -p $ANDROID_HOME/cmdline-tools
-
-
-        cd /tmp
-
-
-        wget -q \
-        https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-
-
-        unzip -q commandlinetools-linux-11076708_latest.zip
-
-
-        mkdir -p $ANDROID_HOME/cmdline-tools/latest
-
-
-        mv cmdline-tools/* \
-        $ANDROID_HOME/cmdline-tools/latest/
-
-
-        export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
-
-
-        yes | sdkmanager --licenses || true
-
-
-        sdkmanager \
-        "platform-tools" \
-        "platforms;android-35" \
-        "build-tools;35.0.0"
-
-
-
-    - name: Fix sdkmanager compatibility
-      shell: bash
+    - name: Build APK
       run: |
-
-        SDK=$HOME/.buildozer/android/platform/android-sdk
-
-
-        mkdir -p $SDK/tools/bin
-
-
-        ln -sf \
-        $SDK/cmdline-tools/latest/bin/sdkmanager \
-        $SDK/tools/bin/sdkmanager
-
-
-
-    - name: Build mohadeseh gym APK
-      shell: bash
-      run: |
-
         export PATH=$PATH:$HOME/.local/bin
-
-
+        autoreconf --version
+        buildozer android clean
         buildozer android debug
-
-
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
-
       with:
-
         name: mohadeseh-gym-apk
-
         path: bin/*.apk
