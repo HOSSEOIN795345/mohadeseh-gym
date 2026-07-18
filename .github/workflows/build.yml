@@ -7,6 +7,7 @@ on:
       - main
 
 jobs:
+
   build:
     runs-on: ubuntu-22.04
 
@@ -19,13 +20,14 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt update
+
         sudo apt install -y \
           python3 \
           python3-pip \
           git \
           unzip \
           wget \
-          openjdk-11-jdk \
+          openjdk-17-jdk \
           autoconf \
           automake \
           libtool \
@@ -33,10 +35,22 @@ jobs:
           build-essential
 
 
-    - name: Install Android SDK command line tools
+    - name: Set Java 17
       run: |
 
-        mkdir -p $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
+        echo "JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64" >> $GITHUB_ENV
+
+        echo "/usr/lib/jvm/temurin-17-jdk-amd64/bin" >> $GITHUB_PATH
+
+        java -version
+
+
+    - name: Install Android command line tools
+      run: |
+
+        export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
+
+        mkdir -p $ANDROID_HOME/cmdline-tools
 
         cd /tmp
 
@@ -45,17 +59,17 @@ jobs:
         unzip -q commandlinetools-linux-11076708_latest.zip
 
         mv cmdline-tools \
-        $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest
+        $ANDROID_HOME/cmdline-tools/latest
 
 
-    - name: Configure Android SDK
+    - name: Install Android SDK packages
       run: |
 
         export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
 
         export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
 
-        yes | sdkmanager --licenses
+        yes | sdkmanager --licenses || true
 
         sdkmanager \
           "platform-tools" \
@@ -77,6 +91,8 @@ jobs:
       run: |
 
         export PATH=$PATH:$HOME/.local/bin
+
+        export JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64
 
         rm -rf .buildozer
 
