@@ -8,7 +8,7 @@ package.domain = com.mohadeseh
 
 source.dir = .
 
-source.include_exts = py,png,jpg,jpeg,kv,json,atlas
+source.include_exts = py,kv,png,jpg,jpeg,json
 
 version = 1.0
 
@@ -23,8 +23,6 @@ fullscreen = 0
 
 log_level = 2
 
-warn_on_root = 1
-
 
 [android]
 
@@ -32,23 +30,19 @@ android.api = 35
 
 android.minapi = 23
 
-android.ndk = 27c
+android.ndk = 28c
+
+android.sdk_path = /home/runner/.buildozer/android/platform/android-sdk
+
+android.ndk_path = /home/runner/.buildozer/android/platform/android-ndk-r28c
 
 android.build_tools_version = 35.0.0
 
 android.accept_sdk_license = True
 
-android.archs = arm64-v8a,armeabi-v7a
+android.archs = arm64-v8a
 
 
-# فعال کردن AIDL و ابزارهای لازم
-android.skip_update = False
+[python-for-android]
 
-
-[p4a]
-
-android.bootstrap = sdl2
-
-android.private_storage = True
-
-android.ndk_api = 23
+android_api = 35
